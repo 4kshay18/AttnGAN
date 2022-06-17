@@ -16,6 +16,7 @@ from miscc.utils import weights_init, load_params, copy_G_params
 from model import G_DCGAN, G_NET
 from datasets import prepare_data
 from model import RNN_ENCODER, CNN_ENCODER
+from pandas import DataFrame as dff
 
 from miscc.losses import words_loss
 from miscc.losses import discriminator_loss, generator_loss, KL_loss
@@ -220,7 +221,7 @@ class condGANTrainer(object):
         avg_param_G = copy_G_params(netG)
         optimizerG, optimizersD = self.define_optimizers(netG, netsD)
         real_labels, fake_labels, match_labels = self.prepare_labels()
-
+        errGL, logGL, geniterl = [], [], []
         batch_size = self.batch_size
         nz = cfg.GAN.Z_DIM
         noise = Variable(torch.FloatTensor(batch_size, nz))
@@ -292,6 +293,20 @@ class condGANTrainer(object):
                 kl_loss = KL_loss(mu, logvar)
                 errG_total += kl_loss
                 G_logs += 'kl_loss: %.2f ' % kl_loss.item()
+
+
+                #Save Generator Loss & Logs
+                errG_total1 = float(errG_total.cpu())
+                geniterl.append(gen_iterations)
+                errGL.append(errG_total1)
+                logGL.append(G_logs)
+
+                col1, col2, col3 = 'Generator Error', 'Generator Logs', 'Iteration'
+
+                dataSave = dff({col1: errGL, col2: logGL, col3: geniterl})
+                save_name = f'generator_sheet_gammatwo{int(cfg.TRAIN.SMOOTH.GAMMA2)}.xlsx'
+                dataSave.to_excel(save_name, sheet_name='sheet1', index=False)
+                
                 # backward and update parameters
                 errG_total.backward()
                 optimizerG.step()

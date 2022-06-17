@@ -29,8 +29,10 @@ def parse_args():
     parser.add_argument('--gpu', dest='gpu_id', type=int, default=-1)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
+    parser.add_argument('--gammatwo', dest='gammatwo', type=float, default=5.0, help='Value of Gamma2. Best Value till now: 5.')
     args = parser.parse_args()
     return args
+
 
 
 def gen_example(wordtoix, algo):
@@ -95,6 +97,10 @@ if __name__ == "__main__":
 
     if args.data_dir != '':
         cfg.DATA_DIR = args.data_dir
+    
+    if args.gammatwo != '':
+        cfg.TRAIN.SMOOTH.GAMMA2 = args.gammatwo
+
     print('Using config:')
     pprint.pprint(cfg)
 
@@ -110,7 +116,7 @@ if __name__ == "__main__":
 
     now = datetime.datetime.now(dateutil.tz.tzlocal())
     timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
-    output_dir = '../output/%s_%s_%s' % \
+    output_dir = '../output/%s_%s_%s_GAMMA_change' % \
         (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp)
 
     split_dir, bshuffle = 'train', True
